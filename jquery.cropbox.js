@@ -32,6 +32,8 @@
       this.options = options;
       this.image_src = null;
       this.$image = $image;
+      this.originalImageW = this.$image.width();
+      this.originalImageH = this.$image.height();
       this.$image.hide().addClass('cropImage').wrap('<div class="cropFrame" />'); // wrap image in frame;
       this.$frame = this.$image.parent();
       this.init();
@@ -204,12 +206,23 @@
       },
       update: function() {
         this.result = {
-          cropX: -Math.floor(parseInt(this.$image.css('left'), 10) / this.percent),
-          cropY: -Math.floor(parseInt(this.$image.css('top'), 10) / this.percent),
+          cropX: -Math.ceil(parseInt(this.$image.css('left'), 10) / this.percent),
+          cropY: -Math.ceil(parseInt(this.$image.css('top'), 10) / this.percent),
           cropW: Math.round(this.options.width / this.percent),
           cropH: Math.round(this.options.height / this.percent),
           stretch: this.minPercent > 1
         };
+
+        // correct rounding errors - don't want cropX and cropY
+        // to cut off the image in canvas when exporting
+        var dx = (this.result.cropX + this.result.cropW) - this.originalImageW;
+        if (dx > 0) {
+          this.result.cropX -= dx;
+        }
+        var dy = (this.result.cropY + this.result.cropH) - this.originalImageH;
+        if (dy > 0) {
+          this.result.cropY -= dy;
+        }
 
         this.$image.trigger(pluginName, [this.result, this]);
       },
